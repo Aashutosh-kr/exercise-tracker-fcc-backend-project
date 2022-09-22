@@ -1,0 +1,15 @@
+// MongoDB Playground
+// Use Ctrl+Space inside a snippet or a string literal to trigger completions.
+
+// The current database to use.
+use('exercise_tracker');
+
+// db.getCollection("users").find({username: /fcc_*/}, {_id: 0, username: 1, _id: 0}).sort({username: 1})
+
+// delete all documents in the current users collection with username with regular expression /fcc_*/.
+
+db.getCollection("users").deleteMany({username: /fcc_*/})
+
+
+
+
