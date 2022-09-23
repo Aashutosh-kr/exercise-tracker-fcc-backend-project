@@ -56,7 +56,6 @@ router.get("/", async (req, res) => {
 
 router.post("/:_id/exercises", async (req, res) => {
 	try {
-		const user = await User.findById(req.params._id);
 		const { description, duration, date } = req.body;
 		console.log("req.body", req.body);
 		const newExercise = new exerciseLog(description, parseInt(duration), date);
@@ -65,6 +64,7 @@ router.post("/:_id/exercises", async (req, res) => {
 			{ $push: { log: newExercise } },
 			{ new: true }
 		);
+		const user = await User.findById(req.params._id);
 		response = {
 			_id: user._id,
 			username: user.username,
@@ -101,19 +101,16 @@ router.get("/:_id/logs", async (req, res) => {
 		const { from, to, limit } = req.query;
 		console.log("req.query", req.query);
 		let log = user.log;
-		if (from) {
-			log = log.filter((exercise) => {
+		from &&
+			(log = log.filter((exercise) => {
 				return new Date(exercise.date) >= new Date(from);
-			});
-		}
-		if (to) {
-			log = log.filter((exercise) => {
-				return new Date(exercise.date) <= new Date(to);
-			});
-		}
-		if (limit) {
-			log = log.slice(0, limit);
-		}
+			})) &&
+			to &&
+			(log =
+				log.filter((exercise) => {
+					return new Date(exercise.date) <= new Date(to);
+				}) && (log = log.slice(0, limit)));
+
 		response = {
 			count: log.length,
 			log,
