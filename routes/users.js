@@ -30,13 +30,16 @@ router.post("/", async (req, res) => {
 
 		const prevUser = await User.findOne({ username });
 		if (prevUser) {
-			response = { username: prevUser.username, _id: prevUser._id };
+			return res
+				.status(200)
+				.json({ username: prevUser.username, _id: prevUser._id });
 		} else {
 			const newUser = new User(new user(username, []));
 			const savedUser = await newUser.save();
-			response = { username: savedUser.username, _id: savedUser._id };
+			return res
+				.status(200)
+				.json({ username: savedUser.username, _id: savedUser._id });
 		}
-		return res.status(200).json(response);
 	} catch (error) {
 		console.log(error);
 	}
@@ -65,29 +68,16 @@ router.post("/:_id/exercises", async (req, res) => {
 			{ new: true }
 		);
 		const user = await User.findById(req.params._id);
-		response = {
-			_id: user._id,
-			username: user.username,
-			description,
-			duration,
-			date,
-		};
-		return res.status(200).json(response);
-	} catch (error) {
-		console.log(error);
-	}
-});
-
-// Get at /api/users/:_id/logs
-
-router.get("/:_id/logs", async (req, res) => {
-	try {
-		const user = await User.findById(req.params._id);
-		response = {
-			count: user.log.length,
-			log: user.log,
-		};
-		return res.status(200).json(response);
+		return (
+			user &&
+			res.status(200).json({
+				_id: user._id,
+				username: user.username,
+				description: newExercise.description,
+				duration: newExercise.duration,
+				date: newExercise.date,
+			})
+		);
 	} catch (error) {
 		console.log(error);
 	}
@@ -100,22 +90,29 @@ router.get("/:_id/logs", async (req, res) => {
 		const user = await User.findById(req.params._id);
 		const { from, to, limit } = req.query;
 		console.log("req.query", req.query);
-		let log = user.log;
-		from &&
-			(log = log.filter((exercise) => {
-				return new Date(exercise.date) >= new Date(from);
-			})) &&
-			to &&
-			(log =
-				log.filter((exercise) => {
-					return new Date(exercise.date) <= new Date(to);
-				}) && (log = log.slice(0, limit)));
+		if (user) {
+			let log = user.log;
 
-		response = {
-			count: log.length,
-			log,
-		};
-		return res.status(200).json(response);
+			if (from) {
+				log = log.filter((exercise) => {
+					return new Date(exercise.date) >= new Date(from);
+				});
+			}
+			if (to) {
+				log = log.filter((exercise) => {
+					return new Date(exercise.date) <= new Date(to);
+				});
+			}
+			if (limit) {
+				log = log.slice(0, limit);
+			}
+
+			response = {
+				count: user.log.length,
+				log,
+			};
+			return res.status(200).json(response);
+		}
 	} catch (error) {
 		console.log(error);
 	}
